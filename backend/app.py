@@ -1,7 +1,8 @@
 from flask import Flask, jsonify
-from extension import db,cors,jwt
+from extension import db,cors,jwt,init_cloudinary
 from routes.auth import auth_bp
 from routes.post import post_bp
+from routes.like import like_bp
 from config import Config
 from models import User
 def create_app():
@@ -10,8 +11,10 @@ def create_app():
     db.init_app(app)
     cors.init_app(app)
     jwt.init_app(app)
+    init_cloudinary(app) 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(post_bp, url_prefix='/api')
+    app.register_blueprint(like_bp, url_prefix='/api')
     with app.app_context():
         db.create_all()
     return app
