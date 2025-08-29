@@ -62,12 +62,3 @@ def get_post(post_id):
         "created_at": post.created_at,
         "author": post.user.username
     }), 200
-@post_bp.route("/posts/del", methods=["DELETE"])
-def deleteAllPosts():
-    try:
-        num_rows_deleted = db.session.query(Post).delete()
-        db.session.commit()
-        return f"Deleted {num_rows_deleted} posts."
-    except Exception as e:
-        db.session.rollback()
-        return str(e)
