@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
+import 'createNewPost.dart';
+import 'profile.dart';
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -9,16 +11,25 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  @override
+  void initState(){
+    super.initState();
 
-  final List<Widget> _pages = [
-    const HomePage(),
-    const CreatePostPage(),
-    const SearchPage(),
-    const ProfilePage(),
-  ];
-
+  }
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _pages=[
+      HomePage(key: UniqueKey(),),
+      CreatePostPage(
+        onPostCreated: () {
+          setState(() {
+            _currentIndex = 0;
+          });
+        },
+      ),
+      const SearchPage(),
+      const ProfilePage(),
+    ];
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -53,20 +64,9 @@ class _MainScreenState extends State<MainScreen> {
 //   Widget build(BuildContext context) => const Center(child: Text("Home Page"));
 // }
 
-class CreatePostPage extends StatelessWidget {
-  const CreatePostPage({super.key});
-  @override
-  Widget build(BuildContext context) => const Center(child: Text("Create Post Page"));
-}
 
 class SearchPage extends StatelessWidget {
   const SearchPage({super.key});
   @override
   Widget build(BuildContext context) => const Center(child: Text("Search Page"));
-}
-
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
-  @override
-  Widget build(BuildContext context) => const Center(child: Text("Profile Page"));
 }

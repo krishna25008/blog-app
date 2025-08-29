@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
@@ -13,7 +14,7 @@ class ApiService {
     );
     final data = jsonDecode(response.body);
     if (response.statusCode == 200) {
-      return jsonDecode(response.body); // success response
+      return jsonDecode(response.body);
     } else {
       throw Exception(data["error"] ?? "Something went wrong");
     }
@@ -46,5 +47,33 @@ class ApiService {
     } else {
       throw Exception("Failed to fetch posts: ${response.body}");
     }
+  }
+  static Future<void> clickLiked(String postId, String token) async{
+    final url = Uri.parse("$baseUrl/api/like/$postId");
+    final response = await http.post(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+    if (response.statusCode != 200) {
+      throw Exception("Failed to toggle like: ${response.body}");
+    }
+  }
+  static Future<http.StreamedResponse> createPost({
+    required String title,
+    required String content,
+    required File imageFile,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token");
+    final uri = Uri.parse("$baseUrl/api/posts");
+    var request = http.MultipartRequest("POST", uri)
+      ..headers["Authorization"] = "Bearer $token"
+      ..fields["title"] = title
+      ..fields["content"] = content
+      ..files.add(await http.MultipartFile.fromPath("file", imageFile.path));
+    return await request.send();
   }
 }

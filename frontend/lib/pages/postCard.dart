@@ -1,16 +1,50 @@
 import 'package:flutter/material.dart';
 import '../models/post.dart';
-
+import '../services/api_service.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 class PostCard extends StatefulWidget {
   final Post post;
-  const PostCard({super.key, required this.post});
-
+  final String? token;
+  const PostCard({super.key, required this.post,required this.token});
   @override
   State<PostCard> createState() => _PostCardState();
 }
-
 class _PostCardState extends State<PostCard> {
-  bool isLiked = false;
+  bool _isLoading = false;
+
+  Future<void> clickLike() async{
+    if(_isLoading) return;
+    setState(() {
+      _isLoading = true;
+      if (widget.post.isLiked) {
+        widget.post.isLiked = false;
+        widget.post.likes -= 1;
+      } else {
+        widget.post.isLiked = true;
+        widget.post.likes += 1;
+      }
+    });
+    try{
+      await ApiService.clickLiked(widget.post.id, widget.token??" ");
+    }
+    catch(e){
+      setState(() {
+        if (widget.post.isLiked) {
+          widget.post.isLiked = false;
+          widget.post.likes -= 1;
+        } else {
+          widget.post.isLiked = true;
+          widget.post.likes += 1;
+        }
+      });
+      print("Like error: $e");
+    }
+    finally{
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -33,9 +67,23 @@ class _PostCardState extends State<PostCard> {
           // Post Image
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(widget.post.postImage, fit: BoxFit.cover),
+            child: CachedNetworkImage(
+              imageUrl: widget.post.postImage,        // your post image URL
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                height: 200,                          // same height as your image
+                width: double.infinity,
+                alignment: Alignment.center,
+                child: const CircularProgressIndicator(), // loading spinner
+              ),
+              errorWidget: (context, url, error) => Container(
+                height: 200,
+                width: double.infinity,
+                color: Colors.grey[300],
+                child: const Icon(Icons.broken_image, color: Colors.grey),
+              ),
+            ),
           ),
-
           // Like n Comment Row
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -43,13 +91,12 @@ class _PostCardState extends State<PostCard> {
               children: [
                 IconButton(
                   icon: Icon(
-                    isLiked ? Icons.favorite : Icons.favorite_border,
+                    widget.post.isLiked ? Icons.favorite : Icons.favorite_border,
                     color: Colors.red,
                   ),
                   onPressed: () {
                     setState(() {
-                      isLiked = !isLiked;
-                      widget.post.likes += isLiked ? 1 : -1;
+                      clickLike();
                     });
                   },
                 ),

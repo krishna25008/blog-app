@@ -33,9 +33,11 @@ dependencies:
   http: ^0.13.6
   shared_preferences: ^2.2.2
   jwt_decoder: ^2.0.1
-  # The following adds the Cupertino Icons font to your application.
+  image_picker: ^1.0.7
+  # The following adds the Cupertino Icons fonts to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  cached_network_image: ^3.3.0
 
 dev_dependencies:
   flutter_test:
@@ -53,8 +55,17 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
-  # The following line ensures that the Material Icons font is
+  assets:
+    - assets/logos/
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-Regular.ttf
+        - asset: assets/fonts/Manrope-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Manrope-ExtraBold.ttf
+          weight: 800
+  # The following line ensures that the Material Icons fonts is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
@@ -72,8 +83,8 @@ flutter:
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
+  # "family" key with the fonts family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the fonts. For
   # example:
   # fonts:
   #   - family: Schyler

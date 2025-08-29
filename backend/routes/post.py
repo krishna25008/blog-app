@@ -25,15 +25,17 @@ def create_post():
     db.session.add(new_post)
     db.session.commit()
     return jsonify({"message": "Post created successfully"}), 201
-
 #get all posts
 @post_bp.route("/posts", methods=["GET"])
 @jwt_required()
 def get_posts():
-    posts = Post.query.all()
+    liked=False
+    posts = Post.query.order_by(Post.created_at.desc()).all()
     result = []
+    user_id = int(get_jwt_identity())
     for post in posts:
         likes_count = Like.query.filter_by(post_id=post.id).count()
+        liked= Like.query.filter_by(post_id=post.id,user_id=user_id).first() is not None
         result.append({
             "id": post.id,
             "title": post.title,
@@ -43,14 +45,16 @@ def get_posts():
             "postImage": post.image_url,
             "userImage": None,
             "likes": likes_count,
-            "comments": 0
+            "comments": 0,
+            "is_liked": liked
         })
     return jsonify(result), 200
-
 @post_bp.route("/posts/<int:post_id>", methods=["GET"])
 @jwt_required()
 def get_post(post_id):
     post = Post.query.get_or_404(post_id)
+    userss = [like.user.username for like in post.likes]
+    print(userss)
     return jsonify({
         "id": post.id,
         "title": post.title,
@@ -58,3 +62,12 @@ def get_post(post_id):
         "created_at": post.created_at,
         "author": post.user.username
     }), 200
+@post_bp.route("/posts/del", methods=["DELETE"])
+def deleteAllPosts():
+    try:
+        num_rows_deleted = db.session.query(Post).delete()
+        db.session.commit()
+        return f"Deleted {num_rows_deleted} posts."
+    except Exception as e:
+        db.session.rollback()
+        return str(e)

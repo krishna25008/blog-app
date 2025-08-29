@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
+import '../common/utils/jwt_helper.dart';
 import 'postCard.dart';
 import '../models/post.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
 class HomePage extends StatefulWidget {
@@ -11,9 +10,9 @@ class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
-
 class _HomePageState extends State<HomePage> {
   String? username;
+  String? token;
   final List<Post> posts = [
   ];
   @override
@@ -26,28 +25,31 @@ class _HomePageState extends State<HomePage> {
     try{
       final data=await ApiService.getPosts();
       final fetchedPosts=data.map<Post>((json)=>Post.fromJson(json)).toList();
-      print(fetchedPosts);
       setState(() {
         posts.clear();
         posts.addAll(fetchedPosts);
       });
     }
+
     catch(e){
       print(e);
     }
   }
   Future<void> _loadUserFromToken() async{
-    final prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString("token");
-    if(token!=null){
-      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+    String? savedToken = await JwtHelper.getToken();
+    if(savedToken!=null){
+      Map<String, dynamic>? decodedToken = JwtHelper.decodeToken(savedToken);
       print(decodedToken);
+      if(decodedToken==null){
+        throw Exception("no token found");
+      }
       dynamic sub=decodedToken["sub"];
 
       if (sub is String) {
         sub = jsonDecode(sub.replaceAll("'", '"'));
       }
       setState(() {
+        token=savedToken;
         username = decodedToken["username"];
       });
     }
@@ -69,7 +71,7 @@ class _HomePageState extends State<HomePage> {
             child: Text("Recent posts",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           ),
-          ...posts.map((p) => PostCard(post: p)).toList(),
+          ...posts.map((p) => PostCard(post: p,token:token)).toList(),
         ],
       ),
     );

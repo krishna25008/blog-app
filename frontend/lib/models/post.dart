@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 class Post {
   final String id;
   final String username;
@@ -5,6 +7,7 @@ class Post {
   final String userImage;
   final String postImage;
   final String caption;
+  bool isLiked;
   int likes;
   int comments;
 
@@ -15,7 +18,8 @@ class Post {
     required this.userImage,
     required this.postImage,
     required this.caption,
-    this.likes = 0,
+    required this.isLiked,
+    this.likes =0,
     this.comments = 0,
   });
 
@@ -27,6 +31,7 @@ class Post {
       userImage: json["userImage"]?? "https://picsum.photos/200",
       postImage: json["postImage"],
       caption: json["caption"],
+      isLiked: json["is_liked"],
       likes: json["likes"],
       comments: json["comments"],
     );
