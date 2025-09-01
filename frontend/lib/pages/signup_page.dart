@@ -53,15 +53,12 @@ class _SignupPageState extends State<SignupPage> {
                 child: Column(
                   children: [
                     Image.asset(
-                      'assets/logos/appreciate.png', // your image path
-                      width: 80,
-                      height: 80,
-                      color: Colors.teal, // optional: tint the image like icon color
+                      'assets/logos/appreciate.png',
+                      width: 120,
+                      height: 120,
+                      // color: Colors.teal, // optional: tint the image like icon color
                     ),
                     SizedBox(height: 10),
-                    Text("appreciate",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 22)),
                   ],
                 ),
               ),

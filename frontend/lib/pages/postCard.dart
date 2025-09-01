@@ -2,16 +2,193 @@ import 'package:flutter/material.dart';
 import '../models/post.dart';
 import '../services/api_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'EditPost.dart';
+import '../common/utils/jwt_helper.dart';
+import 'CommentsSheet.dart';
 class PostCard extends StatefulWidget {
   final Post post;
   final String? token;
-  const PostCard({super.key, required this.post,required this.token});
+  final VoidCallback? onPostChanged;
+  final VoidCallback? onPostDelete;
+  const PostCard({super.key, required this.post,required this.token, required  this.onPostChanged,required this.onPostDelete});
   @override
   State<PostCard> createState() => _PostCardState();
 }
 class _PostCardState extends State<PostCard> {
-  bool _isLoading = false;
 
+  void hidePost() {
+    print("Hide post logic here");
+  }
+
+  Future<void> showDeleteConfirmationDialog(BuildContext context, Function onConfirm) async {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.error, color: Colors.red, size: 40),
+              ),
+              SizedBox(height: 16),
+              Text(
+                "Delete this post?",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Are you sure you want to delete this post?",
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // close
+              },
+              child: Text("No", style: TextStyle(color: Colors.black)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                onConfirm();
+              },
+              child: Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  bool _isLoading = false;
+  void showPostOptions(BuildContext context) async{
+    Map<String, dynamic>? decodedToken = await JwtHelper.decodeToken();
+    String CurrUser=decodedToken?["username"];
+    showModalBottomSheet(context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(35),
+          )
+        )
+        ,builder: (context){
+       return Container(
+         decoration: BoxDecoration(
+           color: Colors.grey[200],
+           borderRadius: const BorderRadius.vertical(
+             top: Radius.circular(35),
+           ),
+         ),
+         padding: EdgeInsets.symmetric(vertical: 38,horizontal: 28),
+         child: Column(
+           mainAxisSize: MainAxisSize.min,
+           children: [
+             if(widget.post.username == CurrUser)...[
+             Container(
+               decoration: BoxDecoration(
+                 color: Colors.white,
+                 borderRadius: BorderRadius.circular(12),
+               ),
+               child: ListTile(
+                 leading: Text("Edit Post",style: TextStyle(fontFamily: "Manrope",fontWeight: FontWeight.w500,fontSize: 18),),
+                 trailing: Icon(Icons.arrow_forward_ios_rounded),
+                 onTap: () async {
+                   Navigator.pop(context); // close bottom sheet first
+                   Navigator.push(
+                     context,
+                     MaterialPageRoute(
+                       builder: (context) => EditPostPage(post:widget.post,onPostUpdated:(changes){
+                         setState(() {
+                           widget.post.title = changes["title"];
+                           widget.post.content = changes["content"];
+                           widget.post.postImage = changes["postImage"];
+                         });
+                       },),
+                     ),
+                   );
+                 },
+               ),
+             ),
+             SizedBox(height: 10),
+             //delete
+             GestureDetector(
+               onTap: (){
+                 showDeleteConfirmationDialog(context, () async {
+                   setState(() {
+                     _isLoading = true;
+                   });
+
+                   try {
+                     bool success = await ApiService.deletePost(int.parse(widget.post.id), widget.token ?? "");
+
+                     if (success) {
+                       Navigator.pop(context); // close bottom sheet if still open
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(content: Text("Post deleted successfully")),
+                       );
+                       widget.onPostDelete?.call();
+                     } else {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(content: Text("Failed to delete post")),
+                       );
+                     }
+                   } catch (e) {
+                     ScaffoldMessenger.of(context).showSnackBar(
+                       SnackBar(content: Text("Error deleting post: $e")),
+                     );
+                   } finally {
+                     setState(() {
+                       _isLoading = false;
+                     });
+                   }
+                 });
+               },
+               child: Container(
+                 decoration: BoxDecoration(
+                   color: Colors.white,
+                   borderRadius: BorderRadius.circular(12),
+                 ),
+                 child: ListTile(
+                   leading: Text("Delete Post",style: TextStyle(fontFamily: "Manrope",fontWeight: FontWeight.w500,fontSize: 18),),
+                   trailing: Icon(Icons.arrow_forward_ios_rounded),
+                 ),
+               ),
+             ),
+             SizedBox(height: 10),],
+             Container(
+               decoration: BoxDecoration(
+                 color: Colors.white,
+                 borderRadius: BorderRadius.circular(12),
+               ),
+               child: ListTile(
+                 leading: Text("Hide",style: TextStyle(fontFamily: "Manrope",fontWeight: FontWeight.w500,fontSize: 18),),
+                 trailing: Icon(Icons.arrow_forward_ios_rounded),
+               ),
+             ),
+           ],
+         ),
+       );
+    });
+  }
   Future<void> clickLike() async{
     if(_isLoading) return;
     setState(() {
@@ -29,6 +206,7 @@ class _PostCardState extends State<PostCard> {
     }
     catch(e){
       setState(() {
+        //just for the opti
         if (widget.post.isLiked) {
           widget.post.isLiked = false;
           widget.post.likes -= 1;
@@ -61,7 +239,8 @@ class _PostCardState extends State<PostCard> {
             title: Text(widget.post.username,
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(widget.post.date),
-            trailing: const Icon(Icons.more_vert),
+            trailing: IconButton(onPressed: (){showPostOptions(context);},
+             icon: Icon(Icons.more_vert)),
           ),
 
           // Post Image
@@ -71,7 +250,7 @@ class _PostCardState extends State<PostCard> {
               imageUrl: widget.post.postImage,        // your post image URL
               fit: BoxFit.cover,
               placeholder: (context, url) => Container(
-                height: 200,                          // same height as your image
+                height: 200, // same height as your image
                 width: double.infinity,
                 alignment: Alignment.center,
                 child: const CircularProgressIndicator(), // loading spinner
@@ -102,9 +281,35 @@ class _PostCardState extends State<PostCard> {
                 ),
                 Text("${widget.post.likes}"),
                 const SizedBox(width: 16),
-                const Icon(Icons.comment_outlined),
-                const SizedBox(width: 4),
-                Text("${widget.post.comments} comments"),
+                InkWell(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.white,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      ),
+                      builder: (context) => SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.75,
+                        child: CommentsSheet(postId: int.parse(widget.post.id),onCommentAdded: (){
+                          setState(() {
+                            widget.post.comments += 1;
+                          });
+                        },),
+                      ),
+
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      const Icon(Icons.comment_outlined),
+                      const SizedBox(width: 4),
+                      Text("${widget.post.comments} comments"),
+                    ],
+                  ),
+                )
+
               ],
             ),
           ),
@@ -112,7 +317,7 @@ class _PostCardState extends State<PostCard> {
           // Caption
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Text(widget.post.caption),
+            child: Text(widget.post.content),
           ),
         ],
       ),

@@ -3,10 +3,13 @@ from extension import db,cors,jwt,init_cloudinary
 from routes.auth import auth_bp
 from routes.post import post_bp
 from routes.like import like_bp
+from routes.comments import comment_bp
 from config import Config
 from models import User
+from flask_migrate import Migrate
 def create_app():
     app = Flask(__name__)
+    migrate = Migrate(app, db)
     app.config.from_object(Config)
     db.init_app(app)
     cors.init_app(app)
@@ -15,6 +18,7 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(post_bp, url_prefix='/api')
     app.register_blueprint(like_bp, url_prefix='/api')
+    app.register_blueprint(comment_bp, url_prefix='/api')
     with app.app_context():
         db.create_all()
     return app

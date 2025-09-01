@@ -38,13 +38,12 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadUserFromToken() async{
     String? savedToken = await JwtHelper.getToken();
     if(savedToken!=null){
-      Map<String, dynamic>? decodedToken = JwtHelper.decodeToken(savedToken);
+      Map<String, dynamic>? decodedToken = await JwtHelper.decodeToken();
       print(decodedToken);
       if(decodedToken==null){
         throw Exception("no token found");
       }
       dynamic sub=decodedToken["sub"];
-
       if (sub is String) {
         sub = jsonDecode(sub.replaceAll("'", '"'));
       }
@@ -63,6 +62,7 @@ class _HomePageState extends State<HomePage> {
           Icon(Icons.notifications_none),
           SizedBox(width: 12),
         ],
+        automaticallyImplyLeading: false,
       ),
       body: ListView(
         children: [
@@ -71,7 +71,18 @@ class _HomePageState extends State<HomePage> {
             child: Text("Recent posts",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           ),
-          ...posts.map((p) => PostCard(post: p,token:token)).toList(),
+          ...posts.map((p) => PostCard(post: p,token:token,onPostChanged:(){
+            setState(() {
+              final index = posts.indexWhere((post) => post.id == p.id);
+              if (index != -1) {
+                posts[index] = p;
+              }
+            });
+          },onPostDelete: (){
+            setState(() {
+              posts.removeWhere((post) => post.id == p.id);
+            });
+          },)).toList(),
         ],
       ),
     );

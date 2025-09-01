@@ -1,20 +1,42 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'createNewPost.dart';
+import '../common/utils/jwt_helper.dart';
 import 'profile.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
-
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
+  late String? username,token;
   int _currentIndex = 0;
+  Future<void> _loadUserFromToken() async{
+    String? savedToken = await JwtHelper.getToken();
+    if(savedToken!=null){
+      Map<String, dynamic>? decodedToken = await JwtHelper.decodeToken();
+      print(decodedToken);
+      if(decodedToken==null){
+        throw Exception("no token found");
+      }
+      dynamic sub=decodedToken["sub"];
+      if (sub is String) {
+        sub = jsonDecode(sub.replaceAll("'", '"'));
+      }
+      setState(() {
+        token=savedToken;
+        username = decodedToken["username"];
+      });
+    }
+  }
   @override
   void initState(){
     super.initState();
-
+    _loadUserFromToken();
   }
   @override
   Widget build(BuildContext context) {
@@ -28,7 +50,7 @@ class _MainScreenState extends State<MainScreen> {
         },
       ),
       const SearchPage(),
-      const ProfilePage(),
+      ProfilePage(username: username??""),
     ];
     return Scaffold(
       body: IndexedStack(

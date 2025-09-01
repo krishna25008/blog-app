@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
+import '';
 class CreatePostPage extends StatefulWidget {
   final VoidCallback? onPostCreated;
   const CreatePostPage({super.key,required this.onPostCreated});
@@ -48,7 +49,6 @@ class _CreatePostPageState extends State<CreatePostPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Post created successfully!")),
           );
-          // Navigator.pop(context);
           widget.onPostCreated?.call();
         }
       } else {

@@ -5,7 +5,8 @@ class JwtHelper{
     final prefs=await SharedPreferences.getInstance();
     return prefs.getString("token");
   }
-  static Map<String,dynamic>? decodeToken(String token){
-    return JwtDecoder.decode(token);
+  static Future<Map<String, dynamic>?> decodeToken() async {
+    String? token= await getToken();
+    return JwtDecoder.decode(token!);
   }
 }

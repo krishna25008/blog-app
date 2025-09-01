@@ -1,10 +1,11 @@
 from extension import db
-import datetime
 from datetime import datetime
-class Like(db.Model):
-    __tablename__ = 'likes'
+
+class Comment(db.Model):
+    __tablename__ = 'comments'
     id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String(500), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id',ondelete="CASCADE"), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now())
-    user = db.relationship('User', backref=db.backref('likes', lazy=True))
+    user = db.relationship("User", backref="comments", lazy=True)

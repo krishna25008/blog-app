@@ -4,9 +4,10 @@ class Post {
   final String id;
   final String username;
   final String date;
-  final String userImage;
-  final String postImage;
-  final String caption;
+   String title;
+   String userImage;
+   String postImage;
+   String content;
   bool isLiked;
   int likes;
   int comments;
@@ -15,9 +16,10 @@ class Post {
     required this.id,
     required this.username,
     required this.date,
+    required this.title,
     required this.userImage,
     required this.postImage,
-    required this.caption,
+    required this.content,
     required this.isLiked,
     this.likes =0,
     this.comments = 0,
@@ -30,9 +32,10 @@ class Post {
       date: json["date"],
       userImage: json["userImage"]?? "https://picsum.photos/200",
       postImage: json["postImage"],
-      caption: json["caption"],
+      content: json["content"],
       isLiked: json["is_liked"],
       likes: json["likes"],
+      title:json["title"],
       comments: json["comments"],
     );
   }

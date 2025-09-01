@@ -1,10 +1,10 @@
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from extension import db
-from models import Post,Like
+from models import Post,Like,Comment
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import cloudinary.uploader
 post_bp = Blueprint("post", __name__)
-
 @post_bp.route("/posts", methods=["POST"])
 @jwt_required()
 def create_post():
@@ -35,17 +35,19 @@ def get_posts():
     user_id = int(get_jwt_identity())
     for post in posts:
         likes_count = Like.query.filter_by(post_id=post.id).count()
+        comment_count=Comment.query.filter_by(post_id=post.id).count()
         liked= Like.query.filter_by(post_id=post.id,user_id=user_id).first() is not None
         result.append({
             "id": post.id,
             "title": post.title,
-            "caption": post.content,
+            "content": post.content,
             "date": post.created_at,
             "username": post.user.username,
             "postImage": post.image_url,
+            "updated at": post.updated_at,
             "userImage": None,
             "likes": likes_count,
-            "comments": 0,
+            "comments": comment_count,
             "is_liked": liked
         })
     return jsonify(result), 200
@@ -62,3 +64,74 @@ def get_post(post_id):
         "created_at": post.created_at,
         "author": post.user.username
     }), 200
+#update a post
+@post_bp.route("/posts/<int:post_id>", methods=["PUT"])
+@jwt_required()
+def update_post(post_id):
+    user_id = int(get_jwt_identity())  # Get the user ID from the JWT token
+    post = Post.query.get_or_404(post_id)  # Get the post from the database
+
+    # Only the author can update their own post
+    if post.user_id != user_id:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.form
+    title = data.get("title")  # Get title from form
+    content = data.get("content")  # Get content from form
+
+    print(f"Title: {title}, Content: {content}")  # Debugging line
+
+    # Initialize image_url as None
+    image_url = None
+
+    # Check if an image is included in the form
+    if 'image' in request.files:
+        file = request.files['image']
+        try:
+            # Upload the image to Cloudinary
+            upload_result = cloudinary.uploader.upload(file)
+            image_url = upload_result.get("secure_url")  # Get the Cloudinary URL
+            print(f"File received: {file.filename}")  # Debugging line
+            print(f"Image URL: {image_url}")  # Debugging line
+        except Exception as e:
+            print(f"Error uploading image: {e}")  # Debugging line
+            return jsonify({"error": "Failed to upload image"}), 500
+
+    # Validate title and content
+    if not title or not content:
+        return jsonify({"error": "Title and content are required"}), 400
+
+    # Update the post details
+    post.title = title
+    post.content = content
+    post.updated_at = datetime.utcnow()
+
+    # If the image was uploaded, update the post's image_url
+    if image_url:
+        post.image_url = image_url
+
+    # Commit the changes to the database
+    db.session.commit()
+
+    # Return the updated post details
+    return jsonify({
+        "message": "Post updated successfully",
+        "post": {
+            "id": post.id,
+            "title": post.title,
+            "postImage": post.image_url,
+            "content": post.content,
+            "updated_at": post.updated_at
+        }
+    }), 200
+#delete a post
+@post_bp.route("/posts/<int:post_id>", methods=["DELETE"])
+@jwt_required()
+def delete_post(post_id):
+    user_id = int(get_jwt_identity())
+    post = Post.query.get_or_404(post_id)
+    if post.user_id != user_id:
+        return jsonify({"error": "Unauthorized"}), 403
+    db.session.delete(post)
+    db.session.commit()
+    return jsonify({"message": "Post deleted successfully"}), 200

@@ -47,12 +47,14 @@ class _LoginPageState extends State<LoginPage> {
               Center(
                 child: Column(
                   children: [
-                    Icon(Icons.account_box_rounded,
-                        size: 80, color: Colors.teal),
+                    Image.asset(
+                      'assets/logos/appreciate.png',
+                      width: 120,
+                      height: 120,
+                      // color: Colors.teal, // optional: tint the image like icon color
+                    ),
                     SizedBox(height: 10),
-                    Text("appreciate",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 22)),
+
                   ],
                 ),
               ),

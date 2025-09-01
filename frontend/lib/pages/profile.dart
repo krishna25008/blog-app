@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../common/utils/jwt_helper.dart';
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  final String username;
+  const ProfilePage({super.key, required this.username});
   Future<bool?> showLogoutDialog(BuildContext context){
       return showDialog<bool>(context: context, builder: (BuildContext context){
         return AlertDialog(
@@ -79,15 +81,16 @@ class ProfilePage extends StatelessWidget {
     //remove token
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("token");
-    //redirect to login
     Navigator.pop(context);
   }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
 
-        title: Text("hi!krishna",style: TextStyle(fontFamily: "Manrope",fontWeight: FontWeight.w800,),),
+        title: Text("hi!$username",style: TextStyle(fontFamily: "Manrope",fontWeight: FontWeight.w800,),),
         actions: const [
           Icon(Icons.notification_add),
           SizedBox(width: 12),
