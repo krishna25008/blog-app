@@ -51,6 +51,11 @@ def get_posts():
             "is_liked": liked
         })
     return jsonify(result), 200
+#get paginated posts
+@post_bp.route("/posts/paginated", methods=["GET"])
+@jwt_required()
+def get_paginated_posts():
+    
 @post_bp.route("/posts/<int:post_id>", methods=["GET"])
 @jwt_required()
 def get_post(post_id):
@@ -64,14 +69,9 @@ def get_post(post_id):
         "created_at": post.created_at,
         "author": post.user.username
     }), 200
-#update a post
-@post_bp.route("/posts/<int:post_id>", methods=["PUT"])
-@jwt_required()
 def update_post(post_id):
-    user_id = int(get_jwt_identity())  # Get the user ID from the JWT token
-    post = Post.query.get_or_404(post_id)  # Get the post from the database
-
-    # Only the author can update their own post
+    user_id = int(get_jwt_identity())
+    post = Post.query.get_or_404(post_id) 
     if post.user_id != user_id:
         return jsonify({"error": "Unauthorized"}), 403
 
