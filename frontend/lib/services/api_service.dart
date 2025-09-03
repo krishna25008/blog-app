@@ -37,12 +37,12 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getPosts() async {
+  static Future<Map<String,dynamic>> getPosts(int page,int perPage) async {
     final prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString("token");
     if (token == null) throw Exception("No token found");
     final response = await http.get(
-        Uri.parse("$baseUrl/api/posts"),
+        Uri.parse("$baseUrl/api/pageposts?page=$page&per_page=$perPage"),
         headers: {
           "Authorization": "Bearer $token",
         }

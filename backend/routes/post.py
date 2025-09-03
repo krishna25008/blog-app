@@ -27,17 +27,43 @@ def create_post():
     db.session.commit()
     db.session.close()
     return jsonify({"message": "Post created successfully"}), 201
-@post_bp.route("/posts", methods=["GET"])
+# @post_bp.route("/posts", methods=["GET"])
+# @jwt_required()
+# def get_posts():
+#     liked=False
+#     posts = Post.query.order_by(Post.created_at.desc()).all()
+#     result = []
+#     user_id = int(get_jwt_identity())
+#     for post in posts:
+#         likes_count = Like.query.filter_by(post_id=post.id).count()
+#         comment_count=Comment.query.filter_by(post_id=post.id).count()
+#         liked= Like.query.filter_by(post_id=post.id,user_id=user_id).first() is not None
+#         result.append({
+#             "id": post.id,
+#             "title": post.title,
+#             "content": post.content,
+#             "date": arrow.get(post.created_at).humanize(),
+#             "username": post.user.username,
+#             "postImage": post.image_url,
+#             "updated at": post.updated_at,
+#             "userImage": None,
+#             "likes": likes_count,
+#             "comments": comment_count,
+#             "is_liked": liked
+#         })
+#     return jsonify(result), 200
+@post_bp.route("/pageposts", methods=["GET"])
 @jwt_required()
-def get_posts():
-    liked=False
-    posts = Post.query.order_by(Post.created_at.desc()).all()
-    result = []
-    user_id = int(get_jwt_identity())
-    for post in posts:
-        likes_count = Like.query.filter_by(post_id=post.id).count()
+def get_page_posts():
+    page=request.args.get('page',1,type=int)
+    per_page=request.args.get('per_page',10,type=int)
+    posts=Post.query.order_by(Post.created_at.desc()).paginate(page=page,per_page=per_page,error_out=False)
+    result=[]
+    user_id=int(get_jwt_identity())
+    for post in posts.items:
+        likes_count=Like.query.filter_by(post_id=post.id).count()
         comment_count=Comment.query.filter_by(post_id=post.id).count()
-        liked= Like.query.filter_by(post_id=post.id,user_id=user_id).first() is not None
+        liked=Like.query.filter_by(post_id=post.id,user_id=user_id).first() is not None
         result.append({
             "id": post.id,
             "title": post.title,
@@ -51,7 +77,15 @@ def get_posts():
             "comments": comment_count,
             "is_liked": liked
         })
-    return jsonify(result), 200
+    return jsonify({
+        "posts": result,
+        "meta": {
+            "has_next": posts.has_next,
+            "has_prev": posts.has_prev,
+            "page": posts.page,
+            "total_pages": posts.pages,
+        }
+    }), 200
 #get a single post
 @post_bp.route("/posts/<int:post_id>", methods=["GET"])
 @jwt_required()
