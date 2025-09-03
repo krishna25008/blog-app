@@ -15,7 +15,6 @@ class CommentsSheet extends StatefulWidget {
 class _CommentsSheetState extends State<CommentsSheet> {
   late Future<List<dynamic>> _commentsFuture;
   final TextEditingController _controller = TextEditingController();
-
   @override
   void initState() {
     super.initState();
@@ -76,7 +75,6 @@ class _CommentsSheetState extends State<CommentsSheet> {
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Center(child: Text("No comments yet"));
                 }
-
                 final comments = snapshot.data!;
                 return ListView.builder(
                   itemCount: comments.length,

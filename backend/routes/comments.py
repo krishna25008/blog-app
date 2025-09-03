@@ -14,7 +14,7 @@ def add_comment(post_id):
     if not text:
         return jsonify({"error": "Comment text required"}), 400
 
-    user_id = get_jwt_identity()  # logged in user
+    user_id = get_jwt_identity() 
 
     post = Post.query.get(post_id)
     if not post:
@@ -27,10 +27,9 @@ def add_comment(post_id):
     return jsonify({
         "id": comment.id,
         "text": comment.text,
-        "username": comment.user.username, # if you have this
+        "username": comment.user.username,
         "created_at": comment.created_at.isoformat()
     }), 201
-
 
 # Get comments for a post
 @comment_bp.route("/posts/<int:post_id>/comments", methods=["GET"])
@@ -38,7 +37,6 @@ def get_comments(post_id):
     post = Post.query.get(post_id)
     if not post:
         return jsonify({"error": "Post not found"}), 404
-
     comments = Comment.query.filter_by(post_id=post_id).all()
     return jsonify([
         {
@@ -47,6 +45,5 @@ def get_comments(post_id):
             "username": c.user.username,
             "created_at": c.created_at.isoformat()
         }
-        
         for c in comments
     ]), 200

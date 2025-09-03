@@ -20,66 +20,87 @@ class _PostCardState extends State<PostCard> {
     print("Hide post logic here");
   }
 
-  Future<void> showDeleteConfirmationDialog(BuildContext context, Function onConfirm) async {
-    return showDialog(
+  Future<void> showDeleteConfirmationDialog(
+      BuildContext context,
+      VoidCallback onConfirm,
+      ) async {
+    return showModalBottomSheet(
       context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade100,
-                  shape: BoxShape.circle,
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Container(
+            width: double.infinity,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.error, color: Colors.red, size: 40),
                 ),
-                child: Icon(Icons.error, color: Colors.red, size: 40),
-              ),
-              SizedBox(height: 16),
-              Text(
-                "Delete this post?",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                SizedBox(height: 16),
+                Text(
+                  "Delete this post?",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                "Are you sure you want to delete this post?",
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // close
-              },
-              child: Text("No", style: TextStyle(color: Colors.black)),
+                SizedBox(height: 8),
+                Text(
+                  "Are you sure you want to delete this post?",
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 20),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    SizedBox(
+                      width:double.infinity,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                        child: Text("No"),
+                      ),
+                    ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          onConfirm();
+                        },
+                        child: Text("Yes"),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                onConfirm();
-              },
-              child: Text("Yes"),
-            ),
-          ],
+          ),
         );
       },
     );
   }
+
   bool _isLoading = false;
   void showPostOptions(BuildContext context) async{
     Map<String, dynamic>? decodedToken = await JwtHelper.decodeToken();

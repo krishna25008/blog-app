@@ -1,7 +1,1 @@
-# blog-app
-JWT_SECRET_KEY=yoursecretkey
-DATABASE_URL="postgresql://blog_user:yourpassword@localhost:5432/blog_db"
-DEBUG=True
-CLOUDINARY_CLOUD_NAME=dj7jxdi3f
-CLOUDINARY_API_KEY=321235424528449
-CLOUDINARY_API_SECRET="IO7um9mD5dK6DOZ8B7e9q00Df-o"
+#blog-app

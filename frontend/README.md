@@ -1,3 +1,4 @@
+platform :ios, '13.0'
 # frontend
 
 A new Flutter project.

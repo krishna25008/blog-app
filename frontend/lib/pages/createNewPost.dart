@@ -49,6 +49,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Post created successfully!")),
           );
+          _titleController.clear();
           widget.onPostCreated?.call();
         }
       } else {

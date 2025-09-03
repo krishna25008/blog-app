@@ -4,6 +4,7 @@ from extension import db
 from models import Post,Like,Comment
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import cloudinary.uploader
+import arrow
 post_bp = Blueprint("post", __name__)
 @post_bp.route("/posts", methods=["POST"])
 @jwt_required()
@@ -24,8 +25,8 @@ def create_post():
     new_post = Post(title=title, content=content, user_id=user_id,image_url=image_url)
     db.session.add(new_post)
     db.session.commit()
+    db.session.close()
     return jsonify({"message": "Post created successfully"}), 201
-#get all posts
 @post_bp.route("/posts", methods=["GET"])
 @jwt_required()
 def get_posts():
@@ -41,7 +42,7 @@ def get_posts():
             "id": post.id,
             "title": post.title,
             "content": post.content,
-            "date": post.created_at,
+            "date": arrow.get(post.created_at).humanize(),
             "username": post.user.username,
             "postImage": post.image_url,
             "updated at": post.updated_at,
@@ -51,11 +52,7 @@ def get_posts():
             "is_liked": liked
         })
     return jsonify(result), 200
-#get paginated posts
-@post_bp.route("/posts/paginated", methods=["GET"])
-@jwt_required()
-def get_paginated_posts():
-    
+#get a single post
 @post_bp.route("/posts/<int:post_id>", methods=["GET"])
 @jwt_required()
 def get_post(post_id):
@@ -69,6 +66,9 @@ def get_post(post_id):
         "created_at": post.created_at,
         "author": post.user.username
     }), 200
+#update a post
+@post_bp.route("/posts/<int:post_id>", methods=["PUT"])
+@jwt_required()
 def update_post(post_id):
     user_id = int(get_jwt_identity())
     post = Post.query.get_or_404(post_id) 
@@ -79,16 +79,13 @@ def update_post(post_id):
     title = data.get("title")  # Get title from form
     content = data.get("content")  # Get content from form
 
-    print(f"Title: {title}, Content: {content}")  # Debugging line
+    print(f"Title: {title}, Content: {content}")
 
-    # Initialize image_url as None
     image_url = None
 
-    # Check if an image is included in the form
     if 'image' in request.files:
         file = request.files['image']
         try:
-            # Upload the image to Cloudinary
             upload_result = cloudinary.uploader.upload(file)
             image_url = upload_result.get("secure_url")  # Get the Cloudinary URL
             print(f"File received: {file.filename}")  # Debugging line
@@ -105,15 +102,13 @@ def update_post(post_id):
     post.title = title
     post.content = content
     post.updated_at = datetime.utcnow()
-
-    # If the image was uploaded, update the post's image_url
     if image_url:
         post.image_url = image_url
 
     # Commit the changes to the database
     db.session.commit()
-
-    # Return the updated post details
+    db.session.refresh(post)
+    db.session.close()
     return jsonify({
         "message": "Post updated successfully",
         "post": {
@@ -134,4 +129,5 @@ def delete_post(post_id):
         return jsonify({"error": "Unauthorized"}), 403
     db.session.delete(post)
     db.session.commit()
+    db.session.close()
     return jsonify({"message": "Post deleted successfully"}), 200

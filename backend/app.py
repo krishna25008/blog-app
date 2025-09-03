@@ -5,7 +5,6 @@ from routes.post import post_bp
 from routes.like import like_bp
 from routes.comments import comment_bp
 from config import Config
-from models import User
 from flask_migrate import Migrate
 def create_app():
     app = Flask(__name__)
